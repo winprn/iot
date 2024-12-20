@@ -2,6 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { createClient } from "@supabase/supabase-js";
 import mqtt from "mqtt";
+import { Resend } from "resend";
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -23,10 +24,7 @@ export const MQTT_CLIENT = mqtt.connect("wss://broker.hivemq.com:8884/mqtt", {
 	protocol: "wss",
 	connectTimeout: 30 * 1000,
 });
-
-MQTT_CLIENT.subscribe("062222/LED_1");
-MQTT_CLIENT.subscribe("062222/LED_2");
-MQTT_CLIENT.subscribe("062222/LED_3");
+export const resend = new Resend("re_aJjEAt6T_5ccf84fUwXgXHiwVdhGBZhL8");
 
 export type Data = {
 	date: Date;

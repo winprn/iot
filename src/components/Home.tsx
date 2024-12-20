@@ -1,4 +1,4 @@
-import { MQTT_CLIENT } from '@/lib/utils';
+import { MQTT_CLIENT, resend, SUPABASE_CLIENT } from '@/lib/utils';
 import { Button, ButtonBase, Slider, Switch } from '@mui/material';
 import { Blend, MoveLeft, MoveRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -24,13 +24,48 @@ const LIGHTS = [
 const BRIGHTNESS_MAP = ['64', '128', '255'];
 
 export default function Home() {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const [lights, setLights] = useState(
+    JSON.parse(localStorage.getItem('lights') || '[]') || LIGHTS
+  );
+  MQTT_CLIENT.subscribe('/062222/LED1');
+  MQTT_CLIENT.subscribe('/062222/LED2');
+  MQTT_CLIENT.subscribe('/062222/LED3');
+  MQTT_CLIENT.subscribe('/062222/NOTIFICATIONS');
+
+  const updateLights = (index: number, value: string) => {
+    setLights((prev) =>
+      prev.map((l, i) => (i === index ? { ...l, on: value === 'ON' } : l))
+    );
+  };
+
+  MQTT_CLIENT.on('message', (topic, message) => {
+    switch (topic) {
+      case '/062222/LED1':
+        updateLights(0, message.toString());
+        break;
+      case '/062222/LED2':
+        updateLights(1, message.toString());
+        break;
+      case '/062222/LED3':
+        updateLights(2, message.toString());
+        break;
+      case '/062222/NOTIFICATIONS':
+        resend.emails.send({
+          from: 'onboarding@resend.com',
+          to: user.email,
+          subject: 'Smart light notification',
+          html: `Dear user, here is a notification from your smart lights: ${message.toString()}`,
+        });
+        break;
+      default:
+        break;
+    }
+  });
   const scrollContainerRef = useRef(null);
   if (!localStorage.getItem('lights')) {
     localStorage.setItem('lights', JSON.stringify(LIGHTS));
   }
-  const [lights, setLights] = useState(
-    JSON.parse(localStorage.getItem('lights') || '[]') || LIGHTS
-  );
 
   const handleScrollRight = () => {
     if (scrollContainerRef.current) {
@@ -113,8 +148,8 @@ export default function Home() {
                     );
 
                     MQTT_CLIENT.publishAsync(
-                      `062222/LED${index + 1}`,
-                      light.on ? '0' : '255'
+                      `/062222/RELAY${index + 1}`,
+                      light.on ? 'OFF' : 'ON'
                     );
                   }}
                 />
@@ -133,7 +168,7 @@ export default function Home() {
                     );
 
                     MQTT_CLIENT.publishAsync(
-                      `062222/RELAY${index + 1}`,
+                      `/062222/LED${index + 1}`,
                       BRIGHTNESS_MAP[v - 1]
                     );
                   }}
