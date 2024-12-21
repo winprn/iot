@@ -190,7 +190,7 @@ export default function Home() {
 
                     MQTT_CLIENT.publishAsync(
                       `/062222/LED${index + 1}`,
-                      BRIGHTNESS_MAP[v - 1]
+                      BRIGHTNESS_MAP[(v as number) - 1]
                     );
                   }}
                 />
