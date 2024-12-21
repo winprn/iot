@@ -26,6 +26,8 @@ export default function SignUpPage() {
       setError('Product not found');
       return false;
     }
+
+    return true;
   };
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
