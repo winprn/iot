@@ -26,7 +26,7 @@ const BRIGHTNESS_MAP = ['64', '128', '255'];
 export default function Home() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [lights, setLights] = useState(
-    JSON.parse(localStorage.getItem('lights') || '[]') || LIGHTS
+    JSON.parse(localStorage.getItem('lights') || 'null') || LIGHTS
   );
   const [motionValue, setMotionValue] = useState(
     JSON.parse(localStorage.getItem('motionValue') || `{"state": "OFF"}`).state

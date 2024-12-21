@@ -52,6 +52,7 @@ export default function SignUpPage() {
     }
 
     console.log(user);
+    window.location.href = '/login';
   };
 
   return (
