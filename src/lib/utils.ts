@@ -26,6 +26,11 @@ export const MQTT_CLIENT = mqtt.connect("wss://broker.hivemq.com:8884/mqtt", {
 });
 export const resend = new Resend("re_aJjEAt6T_5ccf84fUwXgXHiwVdhGBZhL8");
 
+MQTT_CLIENT.subscribe("/062222/RELAY1_SEND");
+MQTT_CLIENT.subscribe("/062222/RELAY2_SEND");
+MQTT_CLIENT.subscribe("/062222/RELAY3_SEND");
+MQTT_CLIENT.subscribe("/062222/NOTIFICATIONS");
+
 export type Data = {
 	date: Date;
 	data: number;

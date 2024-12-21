@@ -12,6 +12,7 @@ import LightPage from './pages/lights/index.tsx';
 import HistoryPage from './pages/history/index.tsx';
 import 'chart.js/auto';
 import 'chartjs-adapter-moment';
+import SettingPage from './pages/settings/index.tsx';
 
 const router = createBrowserRouter([
   {
@@ -33,6 +34,10 @@ const router = createBrowserRouter([
       {
         path: 'history',
         element: <HistoryPage />,
+      },
+      {
+        path: 'settings',
+        element: <SettingPage />,
       },
     ],
   },

@@ -28,10 +28,9 @@ export default function Home() {
   const [lights, setLights] = useState(
     JSON.parse(localStorage.getItem('lights') || '[]') || LIGHTS
   );
-  MQTT_CLIENT.subscribe('/062222/LED1');
-  MQTT_CLIENT.subscribe('/062222/LED2');
-  MQTT_CLIENT.subscribe('/062222/LED3');
-  MQTT_CLIENT.subscribe('/062222/NOTIFICATIONS');
+  const [motionValue, setMotionValue] = useState(
+    JSON.parse(localStorage.getItem('motionValue') || `{"state": "OFF"}`).state
+  );
 
   const updateLights = (index: number, value: string) => {
     setLights((prev) =>
@@ -39,29 +38,6 @@ export default function Home() {
     );
   };
 
-  MQTT_CLIENT.on('message', (topic, message) => {
-    switch (topic) {
-      case '/062222/LED1':
-        updateLights(0, message.toString());
-        break;
-      case '/062222/LED2':
-        updateLights(1, message.toString());
-        break;
-      case '/062222/LED3':
-        updateLights(2, message.toString());
-        break;
-      case '/062222/NOTIFICATIONS':
-        resend.emails.send({
-          from: 'onboarding@resend.com',
-          to: user.email,
-          subject: 'Smart light notification',
-          html: `Dear user, here is a notification from your smart lights: ${message.toString()}`,
-        });
-        break;
-      default:
-        break;
-    }
-  });
   const scrollContainerRef = useRef(null);
   if (!localStorage.getItem('lights')) {
     localStorage.setItem('lights', JSON.stringify(LIGHTS));
@@ -89,6 +65,42 @@ export default function Home() {
     localStorage.setItem('lights', JSON.stringify(lights));
   }, [lights]);
 
+  useEffect(() => {
+    MQTT_CLIENT.on('message', (topic, message) => {
+      console.log(topic, message.toString());
+
+      switch (topic) {
+        case '/062222/RELAY1_SEND':
+          updateLights(0, message.toString());
+          break;
+        case '/062222/RELAY2_SEND':
+          updateLights(1, message.toString());
+          break;
+        case '/062222/RELAY3_SEND':
+          updateLights(2, message.toString());
+          break;
+        case '/062222/NOTIFICATIONS':
+          resend.emails.send({
+            from: 'onboarding@resend.com',
+            to: user.email,
+            subject: 'Smart light notification',
+            html: `Dear user, here is a notification from your smart lights: ${message.toString()}`,
+          });
+          break;
+        default:
+          break;
+      }
+    });
+
+    return () => {
+      MQTT_CLIENT.removeAllListeners();
+    };
+  }, [user.email]);
+
+  useEffect(() => {
+    localStorage.setItem('motionValue', JSON.stringify({ state: motionValue }));
+  }, [motionValue]);
+
   return (
     <section className='p-8 flex flex-col gap-10 grow max-w-[60%] items-start h-[80%]'>
       <div>
@@ -96,8 +108,17 @@ export default function Home() {
         <div className='flex gap-8'>
           <div className='p-4 rounded-xl w-40 flex flex-col gap-2 items-start bg-[#D2E9FF]'>
             <div className='flex justify-between items-center w-full'>
-              <p>On</p>
-              <Switch />
+              <p>{motionValue}</p>
+              <Switch
+                value={0}
+                onClick={() => {
+                  setMotionValue(motionValue === 'ON' ? 'OFF' : 'ON');
+                  MQTT_CLIENT.publishAsync(
+                    '/062222/PIR',
+                    motionValue === 'ON' ? 'OFF' : 'ON'
+                  );
+                }}
+              />
             </div>
             <ButtonBase className='!p-3 !bg-[#3E7EF7] !rounded-xl !text-white'>
               <Blend />
